@@ -9,7 +9,7 @@ class Map extends Component {
 	componentDidMount() {
 		//Need to replace API key with env variables!!!
 		//const apiKey = process.env.API_KEY;
-		//this.init();
+		this.init();
 	}
 	init = () => {
 		const direction = direction => {
@@ -24,7 +24,7 @@ class Map extends Component {
 		};
 
 		axios
-			.post(moveURL, direction('n'), options)
+			.get(moveURL, options)
 			.then(response => {
 				console.log(response.data);
 			})
