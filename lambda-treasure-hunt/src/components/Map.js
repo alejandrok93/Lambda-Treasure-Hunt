@@ -4,18 +4,25 @@ import axios from 'axios';
 class Map extends Component {
 	constructor() {
 		super();
-		this.state = { map: {} };
+		this.state = { map: {}, currentRoom: 0 };
 	}
 	componentDidMount() {
 		//Need to replace API key with env variables!!!
 		//const apiKey = process.env.API_KEY;
 		this.init();
 	}
+
+	save_map = map => {
+		if (localStorage.getItem('map')) {
+			//already exists
+		}
+	};
+
 	init = () => {
 		const direction = direction => {
 			return { direction: 'direction' };
 		};
-		const moveURL = 'https://lambda-treasure-hunt.herokuapp.com/api/adv/init/';
+		const initURL = 'https://lambda-treasure-hunt.herokuapp.com/api/adv/init/';
 		const options = {
 			headers: {
 				'Content-Type': 'application/json',
@@ -24,9 +31,19 @@ class Map extends Component {
 		};
 
 		axios
-			.get(moveURL, options)
+			.get(initURL, options)
 			.then(response => {
 				console.log(response.data);
+				if (!localStorage.getItem('map')) {
+					let map = {};
+					let exits = {};
+					response.data.exits.forEach(exit => {
+						exits[exit] = '?';
+					});
+					map[response.data.room_id] = exits;
+					console.log(map);
+					localStorage.setItem('map', JSON.stringify(map));
+				}
 			})
 			.catch(err => console.log(err));
 	};
