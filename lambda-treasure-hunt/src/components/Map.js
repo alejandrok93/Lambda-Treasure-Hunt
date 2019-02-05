@@ -10,12 +10,18 @@ class Map extends Component {
 		//Need to replace API key with env variables!!!
 		//const apiKey = process.env.API_KEY;
 		this.init();
+		this.setState({ map: this.load_map() });
 	}
 
 	save_map = map => {
 		if (localStorage.getItem('map')) {
 			//already exists
 		}
+	};
+
+	load_map = () => {
+		let map = localStorage.getItem('map');
+		return JSON.parse(map);
 	};
 
 	init = () => {
@@ -44,11 +50,13 @@ class Map extends Component {
 					console.log(map);
 					localStorage.setItem('map', JSON.stringify(map));
 				}
+				this.setState({ currentRoom: response.data.room_id });
 			})
 			.catch(err => console.log(err));
 	};
 
 	render() {
+		console.log(this.state);
 		return <div className="map" />;
 	}
 }
