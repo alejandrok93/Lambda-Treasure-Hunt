@@ -10,13 +10,36 @@ class Map extends Component {
 		//Need to replace API key with env variables!!!
 		//const apiKey = process.env.API_KEY;
 		this.init();
-		this.setState({ map: this.load_map() });
 	}
 
-	save_map = map => {
-		if (localStorage.getItem('map')) {
-			//already exists
+	save_map = (direction, prevRoom, currentRoom) => {
+		let map = JSON.parse(localStorage.getItem('map'));
+		console.log(map);
+		if (map) {
+			let exitsObj = {};
+			currentRoom.exits.forEach(exit => {
+				exitsObj[exit] = '?';
+			});
+			console.log(map);
+			console.log(`prev room: ${prevRoom}`);
+			console.log(`direction: ${direction}`);
+			console.log(`current room: ${currentRoom.room_id}`);
+
+			//save in map graph
+			map[prevRoom][direction] = currentRoom.room_id;
+			exitsObj[this.inverse_directions(direction)] = prevRoom;
+
+			if (!map[currentRoom.room_id]) {
+				map[currentRoom.room_id] = exitsObj;
+			} else {
+				map[currentRoom.room_id][this.inverse_directions(direction)] = prevRoom;
+			}
+			console.log(map);
 		}
+
+		//save map to state and local storage
+		this.setState({ map: map });
+		localStorage.setItem('map', JSON.stringify(map));
 	};
 
 	load_map = () => {
@@ -36,9 +59,9 @@ class Map extends Component {
 		}
 	};
 	travel = dir => {
-		console.log('lets traveeeel' + dir);
+		console.log('lets travel ' + dir.toUpperCase());
 		const data = { direction: dir };
-		console.log(data);
+		const prevRoom = this.state.currentRoom.room_id;
 		const moveURL = 'https://lambda-treasure-hunt.herokuapp.com/api/adv/move/';
 		const options = {
 			headers: {
@@ -50,8 +73,15 @@ class Map extends Component {
 		axios
 			.post(moveURL, data, options)
 			.then(response => {
+				let currentRoom = response.data;
 				console.log(response.data);
-				this.setState({ currentRoom: response.data.currentRoom });
+				console.log(`prev room: ${prevRoom}`);
+				console.log(`direction: ${dir}`);
+				console.log(`current room ${response.data.room_id}`);
+				this.setState(
+					{ ...this.state, currentRoom: response.data },
+					this.save_map(dir, prevRoom, currentRoom)
+				);
 			})
 			.catch(err => console.log(err));
 	};
@@ -65,33 +95,34 @@ class Map extends Component {
 		//save map to state and local storage
 
 		const map = this.state.map;
-		console.log(map);
 		let i = 0;
-		while (i < 500) {
-			console.log('hi');
+
+		while (i < 5) {
 			console.log('Current room: ' + this.state.currentRoom.room_id);
 			//let currentRoomExits = this.state.map[this.state.currentRoom.room_id];
+
 			let currentRoomExits = this.state.currentRoom.exits;
 			let unexplored = [];
 			for (let direction of currentRoomExits) {
 				unexplored.push(direction);
 			}
+			console.log(unexplored);
 
 			if (unexplored.length > 0) {
 				let direction = unexplored.pop();
-				console.log(direction);
 				let prevRoomId = this.state.currentRoom.room_id;
 				map[prevRoomId] = {};
-				console.log(map);
 				setInterval(() => {
+					console.log('inside interval, gonna travel to' + direction);
 					this.travel(direction);
-					let exitsObj = {};
-					this.state.currentRoom.exits.forEach(exit => {
-						exitsObj[exit] = '?';
-					});
-					map[prevRoomId][direction] = this.state.currentRoom.room_id;
-					exitsObj[this.inverse_directions(direction)] = prevRoomId;
-					map[this.state.currentRoom.room_id] = exitsObj;
+
+					// let exitsObj = {};
+					// this.state.currentRoom.exits.forEach(exit => {
+					// 	exitsObj[exit] = '?';
+					// });
+					// map[prevRoomId][direction] = this.state.currentRoom.room_id;
+					// exitsObj[this.inverse_directions(direction)] = prevRoomId;
+					// map[this.state.currentRoom.room_id] = exitsObj;
 				}, this.state.currentRoom.cooldown * 1000);
 				console.log(map);
 			} else {
@@ -102,14 +133,11 @@ class Map extends Component {
 	};
 
 	init = () => {
-		const direction = direction => {
-			return { direction: 'direction' };
-		};
 		const initURL = 'https://lambda-treasure-hunt.herokuapp.com/api/adv/init/';
+		const apiKey = 'Token ' + '30e68dddf4426b85e7c98644cf2feb9c5a3d302a';
 		const options = {
 			headers: {
-				'Content-Type': 'application/json',
-				Authorization: 'Token ' + '30e68dddf4426b85e7c98644cf2feb9c5a3d302a'
+				Authorization: apiKey
 			}
 		};
 
@@ -126,11 +154,13 @@ class Map extends Component {
 					map[response.data.room_id] = exits;
 					console.log(map);
 					localStorage.setItem('map', JSON.stringify(map));
+					this.setState({ map: map, currentRoom: response.data });
 				} else {
-					//map = localStorage.getItem('map')
+					let map = JSON.parse(localStorage.getItem('map'));
 					//what to do if map already exists?
+					// set state with existing map
+					this.setState({ map: map, currentRoom: response.data });
 				}
-				this.setState({ currentRoom: response.data });
 			})
 			.catch(err => console.log(err));
 	};
