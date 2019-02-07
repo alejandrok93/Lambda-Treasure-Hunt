@@ -1,43 +1,85 @@
 import React, { Component } from 'react';
 import Room from './Room';
 import axios from 'axios';
+import ReactCytoscape from 'react-cytoscape';
+import Graph from 'react-graph-vis';
 
 class Map extends Component {
 	constructor() {
 		super();
 		this.state = {
 			map: {},
-			currentRoom: 0
+			roomGraph: {
+				0: { n: 1, s: 5, e: 3, w: 7 },
+				1: { s: 0, n: 2, e: 12, w: 15 },
+				2: { s: 1 },
+				3: { w: 0, e: 4 },
+				4: { w: 3 },
+				5: { n: 0, s: 6 },
+				6: { n: 5, w: 11 },
+				7: { w: 8, e: 0 },
+				8: { e: 0 },
+				9: { n: 8, s: 10 },
+				10: { n: 9, e: 11 },
+				11: { w: 10, e: 6 },
+				12: { w: 1, e: 13 },
+				13: { w: 12, n: 14 },
+				14: { s: 13 },
+				15: { e: 1, w: 16 },
+				16: { n: 17, e: 15 },
+				17: { s: 16 }
+			},
+			currentRoom: 0,
+			graph: {
+				nodes: [{ id: 1, label: 'Node 1' }],
+				edges: [{ from: 1, to: 2 }]
+			},
+			options: {
+				layout: {},
+				edges: {
+					color: '#000000'
+				}
+			}
 		};
 	}
 	componentDidMount() {
-		//Need to replace API key with env variables!!!
-		//const apiKey = process.env.API_KEY;
 		this.init();
+		let tmpGraph = {};
+		let nodes = [];
+		let edges = [];
 
 		let roomGraph = this.state.roomGraph;
+		console.log(roomGraph);
 		for (let room_id in roomGraph) {
-			let connections = this.state.rooms[room_id].connections;
+			nodes.push({ id: room_id, label: room_id });
+			let connections = this.state.roomGraph[room_id];
 			let roomConnectionsObj = roomGraph[room_id];
+
 			for (let connection in roomConnectionsObj) {
 				let roomConnectedTo = roomConnectionsObj[connection];
 
 				if (connection === 'n') {
-					connections += 'north-connection';
-					// this.setState({...this.state, rooms[room_id][connections] : connections})
+					//connections += 'north-connection';
+					edges.push({ from: room_id, to: roomConnectedTo });
 				} else if (connection === 's') {
-					connections += 'south-connection';
+					//connections += 'south-connection';
+					edges.push({ from: room_id, to: roomConnectedTo });
 				} else if (connection === 'w') {
-					connections += 'west-connection';
+					//connections += 'west-connection';
+					edges.push({ from: room_id, to: roomConnectedTo });
 				} else if (connection === 'e') {
-					connections += 'east-connection';
+					//connections += 'east-connection';
+					edges.push({ from: room_id, to: roomConnectedTo });
 				}
-				console.log(roomConnectedTo);
+
 				console.log(
 					`${room_id} is connected to ${roomConnectedTo} with ${connection.toUpperCase()} connection`
 				);
 			}
 		}
+		tmpGraph.nodes = nodes;
+		tmpGraph.edges = edges;
+		this.setState({ graph: tmpGraph }, console.log(this.state.graph));
 	}
 
 	save_map = (direction, previousRoom, currentRoom) => {
@@ -201,9 +243,16 @@ class Map extends Component {
 					<button onClick={e => this.traverse()}>Let's traverse! </button>
 				</div>
 
-				{Object.keys(this.state.map).map(room => (
+				<div id="map" className="map">
+					<Graph
+						graph={this.state.graph}
+						options={this.state.options}
+						events={this.state.events}
+					/>
+				</div>
+				{/* {Object.keys(this.state.map).map(room => (
 					<Room id={room} />
-				))}
+				))} */}
 
 				{/* <div className="map">
 					{this.state.rows.map(row => {
