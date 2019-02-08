@@ -134,6 +134,35 @@ class Map extends Component {
 			return 'w';
 		}
 	};
+
+	backtrack = currentRoom => {
+		let q = [];
+		let visited = new Set();
+		let map = this.state.map;
+		q.push([currentRoom]);
+		while (q.length > 0) {
+			let path = q.shift();
+			console.log('path', path);
+
+			let node = path[path.length - 1];
+			console.log('node ', node);
+			console.log('map[node]', map[node]);
+			if (!visited.has(node)) {
+				visited.add(node);
+				for (let [exit, room] of Object.entries(map[node])) {
+					console.log('exit', exit);
+					if (map[node][exit] == '?') {
+						return path;
+					} else {
+						let path_copy = path.slice();
+						path_copy.push(map[node][exit]);
+						q.push(path_copy);
+					}
+				}
+			}
+		}
+		return null;
+	};
 	travel = dir => {
 		console.log('lets travel ' + dir.toUpperCase());
 		const data = { direction: dir };
@@ -155,10 +184,15 @@ class Map extends Component {
 				console.log(`prev room: ${prevRoom.room_id}`);
 				console.log(`direction: ${dir}`);
 				console.log(`current room ${response.data.room_id}`);
-				this.setState(
-					{ ...this.state, currentRoom: response.data },
-					this.save_map(dir, prevRoom, currentRoom)
-				);
+
+				if (prevRoom.room_id === currentRoom.room_id) {
+					console.log('something went wrong with our travels');
+				} else {
+					this.setState(
+						{ ...this.state, currentRoom: response.data },
+						this.save_map(dir, prevRoom, currentRoom)
+					);
+				}
 			})
 			.catch(err => console.log(err));
 	};
@@ -171,6 +205,7 @@ class Map extends Component {
 
 	moveAround = () => {
 		let currentRoom = this.state.currentRoom;
+		let map = this.state.map;
 		let currentRoomExits = this.state.map[currentRoom.room_id];
 		let unexplored = [];
 		console.log(currentRoomExits);
@@ -190,6 +225,30 @@ class Map extends Component {
 			//reached a dead end
 			//back track to prev room with unexplored exits
 			console.log('no unexplored exits available. need to go back');
+			let path = this.backtrack(currentRoom.room_id);
+			if (path === null) {
+				// no more unexplored rooms
+				console.log('done traversing!');
+			} else {
+				console.log('path', path);
+				let directions_to_shortest = [];
+				let currentRoom = path.shift();
+				console.log(currentRoom);
+				console.log(map[currentRoom]);
+				for (let room of path) {
+					for (let direction of map[currentRoom]) {
+						console.log(direction);
+						if (map[currentRoom][direction] === room) {
+							directions_to_shortest.push(direction);
+							currentRoom = room;
+							break;
+						}
+					}
+				}
+				for (let direction of directions_to_shortest) {
+					this.travel(direction);
+				}
+			}
 		}
 	};
 
