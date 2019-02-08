@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import Room from './Room';
 import axios from 'axios';
-import ReactCytoscape from 'react-cytoscape';
 import Graph from 'react-graph-vis';
 
 class Map extends Component {
@@ -72,9 +71,10 @@ class Map extends Component {
 					edges.push({ from: room_id, to: roomConnectedTo });
 				}
 
-				console.log(
-					`${room_id} is connected to ${roomConnectedTo} with ${connection.toUpperCase()} connection`
-				);
+				console
+					.log
+					//`${room_id} is connected to ${roomConnectedTo} with ${connection.toUpperCase()} connection`
+					();
 			}
 		}
 		tmpGraph.nodes = nodes;
@@ -230,17 +230,39 @@ class Map extends Component {
 		console.log(this.state);
 		return (
 			<div className="map-container">
-				<div className="nav-controls">
-					<button onClick={e => this.travel('n')}>Travel North </button>
-					<br />
-					<button onClick={e => this.travel('s')}>Travel South </button>
-					<br />
-					<br />
-					<button onClick={e => this.travel('w')}>Travel West </button>
-					<button onClick={e => this.travel('e')}>Travel East </button>
-					<br />
-					<br />
-					<button onClick={e => this.traverse()}>Let's traverse! </button>
+				<div className="map-info">
+					<div className="nav-controls">
+						<h3>Directions: </h3>
+						<button onClick={e => this.travel('n')}>Travel North </button>
+						<br />
+						<button onClick={e => this.travel('s')}>Travel South </button>
+						<br />
+						<br />
+						<button onClick={e => this.travel('w')}>Travel West </button>
+						<button onClick={e => this.travel('e')}>Travel East </button>
+						<br />
+						<br />
+						<button onClick={e => this.traverse()}>Let's traverse! </button>
+					</div>
+					<div className="current-room-info">
+						<h3>Current Room Info:</h3>
+						<p>
+							Current room:{' '}
+							{`${this.state.currentRoom.title} (${
+								this.state.currentRoom.room_id
+							})`}
+						</p>
+						<p>Room Description: {this.state.currentRoom.description}</p>
+						<p>
+							Possible exits:
+							{this.state.currentRoom
+								? this.state.currentRoom.exits.map(
+										exit => exit.toUpperCase() + ', '
+								  )
+								: ''}
+						</p>
+						<p>Cooldown: {this.state.currentRoom.cooldown}</p>
+					</div>
 				</div>
 
 				<div id="map" className="map">

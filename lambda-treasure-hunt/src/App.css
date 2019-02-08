@@ -1,16 +1,35 @@
 .App {
 	margin: 0 auto;
 	text-align: center;
-	border: 1px solid yellow;
+	background-color: gainsboro;
 }
 
 .map {
 	width: 880px;
 	height: 800px;
-	border: 1px solid brown;
 	margin: 0 auto;
 }
 
+.map-container {
+	display: flex;
+}
+h1 {
+	margin: 0;
+	padding-top: 25px;
+}
+
+.map-info {
+	width: 200px;
+	margin: 10% 2%;
+}
+
+.current-room-info {
+	width: 200px;
+}
+
+.current-room-info p {
+	font-size: 12px;
+}
 .room {
 	background-color: forestgreen;
 	border: 1px solid black;
