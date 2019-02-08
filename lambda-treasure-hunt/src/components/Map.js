@@ -84,7 +84,6 @@ class Map extends Component {
 
 	save_map = (direction, previousRoom, currentRoom) => {
 		let map = JSON.parse(localStorage.getItem('map'));
-		console.log(map);
 		if (map) {
 			let exitsObj = {};
 			currentRoom.exits.forEach(exit => {
@@ -110,12 +109,12 @@ class Map extends Component {
 			} else {
 				map[currentRoom.room_id][this.inverse_directions(direction)] = prevRoom;
 			}
-			console.log(map);
 		}
 
 		//save map to state and local storage
 		this.setState({ map: map });
 		localStorage.setItem('map', JSON.stringify(map));
+		console.log('saved map to state, should be available now!');
 	};
 
 	load_map = () => {
@@ -138,7 +137,7 @@ class Map extends Component {
 	backtrack = currentRoom => {
 		let q = [];
 		let visited = new Set();
-		let map = this.state.map;
+		let map = JSON.parse(localStorage.getItem('map'));
 		q.push([currentRoom]);
 		while (q.length > 0) {
 			let path = q.shift();
@@ -146,6 +145,7 @@ class Map extends Component {
 
 			let node = path[path.length - 1];
 			console.log('node ', node);
+			console.log(map);
 			console.log('map[node]', map[node]);
 			if (!visited.has(node)) {
 				visited.add(node);
@@ -205,8 +205,12 @@ class Map extends Component {
 
 	moveAround = () => {
 		let currentRoom = this.state.currentRoom;
-		let map = this.state.map;
-		let currentRoomExits = this.state.map[currentRoom.room_id];
+		console.log('Current room:', currentRoom.room_id);
+		console.log('Current map:');
+		let map = JSON.parse(localStorage.getItem('map'));
+		console.log(map);
+		let currentRoomExits = map[currentRoom.room_id];
+
 		let unexplored = [];
 		console.log(currentRoomExits);
 
@@ -224,7 +228,15 @@ class Map extends Component {
 		} else {
 			//reached a dead end
 			//back track to prev room with unexplored exits
-			console.log('no unexplored exits available. need to go back');
+			console.log(
+				'no unexplored exits available in room ' +
+					currentRoom.room_id +
+					', need to go back'
+			);
+
+			if (!(currentRoom.room_id in map)) {
+				console.log('map does not have current room in graph');
+			}
 			let path = this.backtrack(currentRoom.room_id);
 			if (path === null) {
 				// no more unexplored rooms
@@ -234,19 +246,22 @@ class Map extends Component {
 				let directions_to_shortest = [];
 				let currentRoom = path.shift();
 				console.log(currentRoom);
-				console.log(map[currentRoom]);
+				console.log('map[currentRoom]', map[currentRoom]);
 				for (let room of path) {
-					for (let direction of map[currentRoom]) {
+					for (let direction in map[currentRoom]) {
 						console.log(direction);
 						if (map[currentRoom][direction] === room) {
 							directions_to_shortest.push(direction);
-							currentRoom = room;
-							break;
+							// currentRoom = room;
+							// break;
 						}
 					}
 				}
 				for (let direction of directions_to_shortest) {
-					this.travel(direction);
+					setTimeout(
+						this.travel(direction),
+						this.state.currentRoom.cooldown * 1000
+					);
 				}
 			}
 		}
