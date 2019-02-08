@@ -306,6 +306,48 @@ class Map extends Component {
 		}
 	};
 
+	take = () => {
+		const takeURL = 'https://lambda-treasure-hunt.herokuapp.com/api/adv/take/';
+		const apiKey = 'Token ' + process.env.REACT_APP_API_KEY;
+		const options = {
+			headers: {
+				Authorization: apiKey
+			}
+		};
+
+		const data = {
+			name: 'treasure'
+		};
+
+		axios
+			.post(takeURL, data, options)
+			.then(response => {
+				console.log(response.data);
+			})
+			.catch(err => console.log(err));
+	};
+
+	drop = () => {
+		const takeURL = 'https://lambda-treasure-hunt.herokuapp.com/api/adv/drop/';
+		const apiKey = 'Token ' + process.env.REACT_APP_API_KEY;
+		const options = {
+			headers: {
+				Authorization: apiKey
+			}
+		};
+
+		const data = {
+			name: 'treasure'
+		};
+
+		axios
+			.post(takeURL, data, options)
+			.then(response => {
+				console.log(response.data);
+			})
+			.catch(err => console.log(err));
+	};
+
 	init = () => {
 		const initURL = 'https://lambda-treasure-hunt.herokuapp.com/api/adv/init/';
 		const apiKey = 'Token ' + process.env.REACT_APP_API_KEY;
@@ -375,7 +417,15 @@ class Map extends Component {
 								: ''}
 						</p>
 						<p>Cooldown: {this.state.currentRoom.cooldown}</p>
+						<p>
+							Items:{' '}
+							{this.state.currentRoom
+								? this.state.currentRoom.items.map(item => item + ', ')
+								: ''}
+						</p>
 					</div>
+					<button onClick={e => this.take()}>Take Treasure </button>
+					<button onClick={e => this.drop()}>Drop Treasure </button>
 				</div>
 
 				<div id="map" className="map">
