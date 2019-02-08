@@ -30,7 +30,7 @@ class Map extends Component {
 			},
 			currentRoom: 0,
 			graph: {
-				nodes: [{ id: 1, label: 'Node 1' }],
+				nodes: [{ id: 1, label: 'Room #0' }],
 				edges: [{ from: 1, to: 2 }]
 			},
 			options: {
@@ -43,14 +43,21 @@ class Map extends Component {
 	}
 	componentDidMount() {
 		this.init();
+		this.load_graph_visualization();
+	}
+
+	load_graph_visualization() {
 		let tmpGraph = {};
 		let nodes = [];
 		let edges = [];
 
-		let roomGraph = this.state.roomGraph;
-		console.log(roomGraph);
+		//let roomGraph = this.state.roomGraph;
+		let roomGraph = JSON.parse(localStorage.getItem('map'));
 		for (let room_id in roomGraph) {
-			nodes.push({ id: room_id, label: room_id });
+			nodes.push({
+				id: room_id,
+				label: room_id
+			});
 			let connections = this.state.roomGraph[room_id];
 			let roomConnectionsObj = roomGraph[room_id];
 
@@ -59,16 +66,36 @@ class Map extends Component {
 
 				if (connection === 'n') {
 					//connections += 'north-connection';
-					edges.push({ from: room_id, to: roomConnectedTo });
+					edges.push({
+						labelHighlightBold: true,
+						label: 'N',
+						from: room_id,
+						to: roomConnectedTo
+					});
 				} else if (connection === 's') {
 					//connections += 'south-connection';
-					edges.push({ from: room_id, to: roomConnectedTo });
+					edges.push({
+						labelHighlightBold: true,
+						label: 'S',
+						from: room_id,
+						to: roomConnectedTo
+					});
 				} else if (connection === 'w') {
 					//connections += 'west-connection';
-					edges.push({ from: room_id, to: roomConnectedTo });
+					edges.push({
+						labelHighlightBold: true,
+						label: 'W',
+						from: room_id,
+						to: roomConnectedTo
+					});
 				} else if (connection === 'e') {
 					//connections += 'east-connection';
-					edges.push({ from: room_id, to: roomConnectedTo });
+					edges.push({
+						labelHighlightBold: true,
+						label: 'E',
+						from: room_id,
+						to: roomConnectedTo
+					});
 				}
 
 				console
@@ -79,7 +106,8 @@ class Map extends Component {
 		}
 		tmpGraph.nodes = nodes;
 		tmpGraph.edges = edges;
-		this.setState({ graph: tmpGraph }, console.log(this.state.graph));
+		console.log(tmpGraph);
+		this.setState({ graph: tmpGraph }, console.log('updated graph'));
 	}
 
 	save_map = (direction, previousRoom, currentRoom) => {
@@ -112,7 +140,7 @@ class Map extends Component {
 		}
 
 		//save map to state and local storage
-		this.setState({ map: map });
+		this.setState({ map: map }, this.load_graph_visualization());
 		localStorage.setItem('map', JSON.stringify(map));
 		console.log('saved map to state, should be available now!');
 	};
@@ -165,6 +193,7 @@ class Map extends Component {
 	};
 	travel = dir => {
 		console.log('lets travel ' + dir.toUpperCase());
+
 		const data = { direction: dir };
 		const apiKey = process.env.REACT_APP_API_KEY;
 		const prevRoom = this.state.currentRoom;
@@ -175,6 +204,16 @@ class Map extends Component {
 				Authorization: 'Token ' + apiKey
 			}
 		};
+
+		//check to see if we know what room is in that direction
+		let next_room_id = null;
+		const map = JSON.parse(localStorage.getItem('map'));
+		if (this.state.currentRoom.room_id in map) {
+			if (map[this.state.currentRoom.room_id][dir] != '?') {
+				next_room_id = map[this.state.currentRoom.room_id][dir];
+				data[next_room_id] = next_room_id;
+			}
+		}
 
 		axios
 			.post(moveURL, data, options)
@@ -197,7 +236,7 @@ class Map extends Component {
 			.catch(err => console.log(err));
 	};
 	traverse = () => {
-		setTimeout(() => {
+		setInterval(() => {
 			this.moveAround();
 			console.log('cooldown: ' + this.state.currentRoom.cooldown);
 		}, 5000);
